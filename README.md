@@ -1,8 +1,8 @@
 # Runara
-#@brief: a batch question ai solver
-#@author: BG2MKJ
-#@date: 2025/06/11
-#@version: /
+### @brief: a batch question ai solver
+### @author: BG2MKJ
+### @date: 2025/06/11
+### @version: /
 
 # Runara用户协议、使用规范及免责声明
 
