@@ -21,12 +21,15 @@ class ImageOCR:
 
     def __init__(self):
         self.image_queue = Queue(maxsize=100)
+        self.result_queue = Queue(maxsize=100)
         self.p_num = 0
         self.runing = False
         self.processes = []
         self.questions = []
         os.makedirs("textfile",exist_ok=True)
         
+    def ready(self):
+        print("ready")
 
     def hash_text(self,text):
         return hashlib.md5(text.encode('utf-8')).hexdigest()
@@ -51,32 +54,51 @@ class ImageOCR:
         print("worker_process is runing")
         self.reader = easyocr.Reader(['ch_sim','en'],gpu=True)
         print("reader initialized")
+        self.ready()
         while True:
             try:
+               
                 task = self.image_queue.get(timeout=1)
                 if task is None:
                     print("picture analysis stop")
+                    self.result_queue.put(None)
                     break
                 image,number = task
                 try:
                     self.save_image(image,number)
-                    
+                    print("processing ",number)
                     result = self.abstract_text_from_image(image)
-                    self.questions.append(result)
-
-                    print(self.questions)
+                    print("processed ",number)
+                    
+                    self.result_queue.put(result)
+                    
+                    
 
                 except Exception as e:
                     print(f"e1:{e}")
                     
             except:
+                time.sleep(0.3)
                 continue
                     
     def start(self):
         print('starting....')
-        p = Process(target=self.worker_process)
-        p.start()
+        self.p = Process(target=self.worker_process)
+        self.p.start()
         self.clipboard_monitor()
+        return self.questions
+
+    def end(self):
+        self.image_queue.put(None)
+        print("stop monitor")
+
+        while self.p.is_alive():
+            time.sleep(0.5)
+            print("waiting attach process")
+        print("attach process ended")
+        shutil.rmtree("textfile//")
+                
+        print("ocr is ended successfully ",len(self.questions)," questions were recoreded")
 
     def clipboard_monitor(self):
         last_hash = None
@@ -87,10 +109,15 @@ class ImageOCR:
         
         while True:
             # print(last_hash)
+            if self.result_queue.empty()==0:
+                q = self.result_queue.get()
+                self.questions.append(q)
+                print(f"question {len(self.questions)} {q}was captured")
             try:
                 image = ImageGrab.grabclipboard()
                 if image is not None:
                     current_hash = self.hash_image(image)
+                    # print(current_hash)
                     if current_hash != last_hash:
                         last_hash = current_hash
                         self.p_num = self.p_num+1
@@ -98,6 +125,7 @@ class ImageOCR:
 
                         if not self.image_queue.full():
                             self.image_queue.put((image.copy(),self.p_num))
+                            print(self.p_num,"added,queue: ",self.image_queue.qsize())
                         else:
                             print("warning : queue is full")
 
@@ -112,21 +140,13 @@ class ImageOCR:
                         print(f"update {text}")
                 time.sleep(0.5)
             except KeyboardInterrupt:
+                if self.result_queue.empty()==0:
+                    continue
+                self.end()
                 
-                self.image_queue.put(None)
-                print("stop monitor")
-                shutil.rmtree("textfile//")
                 break
             except Exception as e:
                 print(f"{e}")
                 time.sleep(0.5)
+        return self.questions
 
-
-
-if __name__ == '__main__':
-    # 所有执行代码放在这里
-    imageocr = ImageOCR()
-    # text = imageocr.abstract_text_from_image("textfile\\t2.png")
-    # print(text)
-
-    imageocr.start()

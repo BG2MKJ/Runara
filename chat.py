@@ -5,10 +5,17 @@ import json
 class Chat_Api:
     api_key = ''
     client =  OpenAI(api_key=api_key,base_url="https://api.deepseek.com")
+
+
     def __init__(self,set_api_key):
         self.api_key = set_api_key
         self.client.api_key=set_api_key
     
+    def generate_promots(self,num_of_questions):
+        promots = f"接下来我将给你{num_of_questions}道题目，帮我解答，注意B选项可能错误识别为8。:"
+        return promots
+
+
     def chat_to_ai(self,question):
         messages = [{"role": "user", "content": question}]
         response = self.client.chat.completions.create(model="deepseek-reasoner",messages=messages)
@@ -31,5 +38,13 @@ class Chat_Api:
             return None
         return balance
 
-chat_api = Chat_Api("sk-4dd7b73b63a149518ffd105c7a464634")
-print(chat_api.request_balance())
+    def ask_question(self,questions):
+        text_question = self.generate_promots(len(questions))
+        for q in questions:
+            text_question+=q
+        print("requesting...")
+        answers = self.chat_to_ai(text_question)
+        return answers
+        
+        
+
