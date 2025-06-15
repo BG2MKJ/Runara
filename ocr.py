@@ -52,11 +52,20 @@ class ImageOCR:
         image.save("textfile\\"+filename+".png","PNG")
         print("number: ",num," save as "+"textfile\\"+filename)
 
+    def delete_image(self,num):
+        filename = f"p_{num}"
+        if os.path.exists("textfile\\"+filename+".png"):
+            os.remove("textfile\\"+filename+".png")
+            print("number: ",num," delete "+"textfile\\"+filename)
+        else:
+            print("file dont exist")
+
     def revocate(self):
         if self.questions:
             r_question = self.questions.pop()
             self.p_num = self.p_num-1
             print(f"delete question: {r_question}")
+            self.delete_image(self.p_num+1)
         else:
             print("cant delete empty question")
 
@@ -88,7 +97,7 @@ class ImageOCR:
                 except Exception as e:
                     print(f"e1:{e}")
                     
-            except:
+            except self.image_queue.Empty:
                 time.sleep(0.3)
                 continue
                     
