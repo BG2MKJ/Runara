@@ -10,7 +10,7 @@ def main():
 
     
     questions = imageocr.start()
-    
+    print(questions)
     answer=chat_api.ask_question(questions)
     print(answer)
     print(chat_api.request_balance())
