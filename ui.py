@@ -1,4 +1,6 @@
 import tkinter as tk
+from ocr import ImageOCR
+from chat import Chat_Api
 
 class UI:
     def confirm_button_click():
