@@ -1,4 +1,6 @@
 import tkinter as tk
+from tkinter import simpledialog
+from tkinter import messagebox
 import version as v
 import configparser
 from typing import Any, Optional
@@ -9,6 +11,7 @@ class Config:
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config[section][item]=str(value)
+        self.save_config()
 
     def read_config(self,section:str,item:str,fallback=None)->Any:
         return self.config.get(section,item,fallback=fallback)
@@ -26,6 +29,14 @@ class Config:
 
 
 class UI:
+    def get_input(self,title:str="input",prompt:str="input"):
+        
+        input_str = simpledialog.askstring(title,prompt,parent=self.root)
+        if input_str is None:
+            return None
+        print(input_str)
+        return input_str
+
     def confirm_button_click(self):
         pass
 
@@ -44,8 +55,18 @@ class UI:
     def set_text(self,text):
         pass
 
+    def load_config(self):
+        self.api_key=self.config.read_config("API","apikey")
+        print("load apikey",self.api_key)
+
     def set_key(self):
-        pass
+        self.api_key=self.get_input("input apikey","input apikey")
+        if self.api_key is not None:
+            self.config.set_config("API","apikey",self.api_key)
+            print("set apikey",self.api_key)
+
+    def show_key(self):
+        messagebox.showinfo("apikey",self.api_key)
 
     def ui_set(self):
         
@@ -56,7 +77,13 @@ class UI:
         self.meunbar=tk.Menu(self.root)
         self.filemeun = tk.Menu(self.meunbar,tearoff=0)
         self.filemeun.add_command(label="设置key",command=self.set_key)
+        self.filemeun.add_command(label="查看key",command=self.show_key)
         self.meunbar.add_cascade(label="文件",menu=self.filemeun)
+
+        self.helpmeun = tk.Menu(self.meunbar,tearoff=0)
+        self.meunbar.add_cascade(label="帮助",menu=self.helpmeun)
+        
+
 
         self.root.config(menu=self.meunbar)
 
@@ -98,7 +125,9 @@ class UI:
 
         self.api_key=""
         self.root = tk.Tk()
+
         self.config=Config()
+        self.load_config()
 
         self.ui_set()
         self.ui_start()
@@ -110,5 +139,4 @@ class UI:
 
 
 u = UI()
-c = Config()
-print(c.read_config("API","apikey"))
+
