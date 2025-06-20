@@ -6,11 +6,14 @@ import pyperclip
 import easyocr
 import hashlib
 import os
+import queue
 from multiprocessing import Process,Queue,cpu_count
 import multiprocessing
 from typing import Optional
 import numpy
 import shutil
+import signal
+import time
 import keyboard
 multiprocessing.set_start_method('spawn',force=True)
 
@@ -71,6 +74,7 @@ class ImageOCR:
 
 
     def worker_process(self):
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         print("worker_process is runing")
         self.reader = easyocr.Reader(['ch_sim','en'],gpu=True)
         print("reader initialized")
@@ -78,7 +82,7 @@ class ImageOCR:
         while True:
             try:
                
-                task = self.image_queue.get(timeout=1)
+                task = self.image_queue.get(timeout=0.1)
                 if task is None:
                     print("picture analysis stop")
                     self.result_queue.put(None)
@@ -97,9 +101,11 @@ class ImageOCR:
                 except Exception as e:
                     print(f"e1:{e}")
                     
-            except self.image_queue.Empty:
-                time.sleep(0.3)
+            except queue.Empty:
+                time.sleep(0.8)
                 continue
+            except Exception as e:
+                print(f"Failed to initialize worker: {e}")
                     
     def start(self):
         print('starting....')

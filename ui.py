@@ -2,10 +2,12 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 import version as v
+from multiprocessing import Process,Queue,cpu_count
+import multiprocessing
 import configparser
 from typing import Any, Optional
-# from ocr import ImageOCR
-# from chat import Chat_Api
+from ocr import ImageOCR
+from chat import Chat_Api
 class Config:
     def set_config(self,section:str,item:str,value:Any):
         if not self.config.has_section(section):
@@ -68,6 +70,9 @@ class UI:
     def show_key(self):
         messagebox.showinfo("apikey",self.api_key)
 
+    def set_infolabel(self,text):
+        self.info_label.config(text=str(text))
+
     def ui_set(self):
         
         self.root.title("Runara")
@@ -117,26 +122,31 @@ class UI:
         self.questioncount_label = tk.Label(self.root,text="Questions count:",font="华文新魏 12")
         self.questioncount_label.place(x=10,y=446)
 
+        self.info_label = tk.Label(self.root,text="ready",font="华文新魏 12")
+        self.info_label.place(x=400,y=16)
+
 
     def ui_start(self):
         self.root.mainloop()
 
-    def __init__(self):
+    def __init__(self,ocr:ImageOCR):
 
         self.api_key=""
         self.root = tk.Tk()
 
         self.config=Config()
         self.load_config()
-
+        # self.ocr_process = Process(target=ocr.start)
+        # self.ocr_process
+        self.root.after(1000,o.start)
         self.ui_set()
         self.ui_start()
         
 
 
-
+if __name__ == "__main__":
         
+    o=ImageOCR()
 
-
-u = UI()
+    u = UI(o)
 
