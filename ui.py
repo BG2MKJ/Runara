@@ -5,17 +5,22 @@ from typing import Any, Optional
 # from ocr import ImageOCR
 # from chat import Chat_Api
 class Config:
-    def set_config(self,config:configparser.ConfigParser,item:str):
-        pass
+    def set_config(self,section:str,item:str,value:Any):
+        if not self.config.has_section(section):
+            self.config.add_section(section)
+        self.config[section][item]=str(value)
 
-    def read_config(self,config:configparser.ConfigParser,item:str):
-        return config.get(str)
+    def read_config(self,section:str,item:str,fallback=None)->Any:
+        return self.config.get(section,item,fallback=fallback)
+    
+    def save_config(self,config_file="config.ini")->Any:
+        with open(config_file,'w') as f:
+            self.config.write(f)
 
-
-    def __init__(self):
+    def __init__(self,config_file = "config.ini"):
         self.config = configparser.ConfigParser()
-        self.config.read("config.ini")
-        self.read_config()
+        self.config.read(config_file)
+        
 
 
 
@@ -42,14 +47,8 @@ class UI:
     def set_key(self):
         pass
 
-    
+    def ui_set(self):
         
-
-    def __init__(self):
-
-        self.api_key=""
-
-        self.root = tk.Tk()
         self.root.title("Runara")
         self.root.geometry("500x500")
         self.root.resizable(False,False)
@@ -92,8 +91,24 @@ class UI:
         self.questioncount_label.place(x=10,y=446)
 
 
-
+    def ui_start(self):
         self.root.mainloop()
+
+    def __init__(self):
+
+        self.api_key=""
+        self.root = tk.Tk()
+        self.config=Config()
+
+        self.ui_set()
+        self.ui_start()
+        
+
+
+
+        
 
 
 u = UI()
+c = Config()
+print(c.read_config("API","apikey"))
