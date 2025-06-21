@@ -4,6 +4,7 @@ from tkinter import messagebox
 import version as v
 from multiprocessing import Process,Queue,cpu_count
 import multiprocessing
+import queue
 import configparser
 from typing import Any, Optional
 from ocr import ImageOCR
@@ -125,28 +126,40 @@ class UI:
         self.info_label = tk.Label(self.root,text="ready",font="华文新魏 12")
         self.info_label.place(x=400,y=16)
 
+    def start_queue_checking(self):
+        try:
+            data = self.data_queue.get_nowait()
+            print("queue:",data)
+        except queue.Empty:
+            pass
+        finally:
+            print(1)
+            self.root.after(100,self.start_queue_checking)
 
     def ui_start(self):
         self.root.mainloop()
 
-    def __init__(self,ocr:ImageOCR):
+    def __init__(self,ocr:ImageOCR,data_queue:Queue):
 
         self.api_key=""
         self.root = tk.Tk()
+        self.data_queue = data_queue
 
         self.config=Config()
         self.load_config()
         # self.ocr_process = Process(target=ocr.start)
         # self.ocr_process
-        self.root.after(1000,o.start)
+        self.start_queue_checking()
+        self.back = Process(target=o.start)
+        self.back.start()
         self.ui_set()
         self.ui_start()
         
 
 
 if __name__ == "__main__":
-        
-    o=ImageOCR()
+    dataqueue = Queue()
+    o=ImageOCR(dataqueue)
 
-    u = UI(o)
+    u = UI(o,dataqueue)
 

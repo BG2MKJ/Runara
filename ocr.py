@@ -19,11 +19,14 @@ multiprocessing.set_start_method('spawn',force=True)
 
 class ImageOCR:
 
-    
+    def send_data(self,head:str,data:str):
+        send = (head,data)
+        self.data_queue.put(send)
     
     
 
-    def __init__(self):
+    def __init__(self,data_queue:Queue):
+        self.data_queue = data_queue
         self.image_queue = Queue(maxsize=100)
         self.result_queue = Queue(maxsize=100)
         self.p_num = 0
@@ -35,6 +38,7 @@ class ImageOCR:
         
     def ready(self):
         print("ready")
+        self.send_data("info","ready")
 
     def hash_text(self,text):
         return hashlib.md5(text.encode('utf-8')).hexdigest()
@@ -109,6 +113,7 @@ class ImageOCR:
                     
     def start(self):
         print('starting....')
+        self.send_data("info","starting")
         self.p = Process(target=self.worker_process)
         self.p.start()
         self.clipboard_monitor()
