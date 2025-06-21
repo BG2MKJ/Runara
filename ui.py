@@ -123,13 +123,17 @@ class UI:
         self.questioncount_label = tk.Label(self.root,text="Questions count:",font="华文新魏 12")
         self.questioncount_label.place(x=10,y=446)
 
-        self.info_label = tk.Label(self.root,text="ready",font="华文新魏 12")
+        self.info_label = tk.Label(self.root,text="init",font="华文新魏 12")
         self.info_label.place(x=400,y=16)
 
     def start_queue_checking(self):
+        if not self.running:
+            return
         try:
             data = self.data_queue.get_nowait()
             print("queue:",data)
+            if data[0]=="info":
+                self.info_label.config(text=data[1])
         except queue.Empty:
             pass
         finally:
@@ -138,9 +142,11 @@ class UI:
 
     def ui_start(self):
         self.root.mainloop()
+        self.running = 0
+        self.back.terminate()
 
-    def __init__(self,ocr:ImageOCR,data_queue:Queue):
-
+    def __init__(self,ocr_class,data_queue:Queue):
+        self.running = 1
         self.api_key=""
         self.root = tk.Tk()
         self.data_queue = data_queue
@@ -150,7 +156,7 @@ class UI:
         # self.ocr_process = Process(target=ocr.start)
         # self.ocr_process
         self.start_queue_checking()
-        self.back = Process(target=o.start)
+        self.back = Process(target=ocr_class(data_queue).start)
         self.back.start()
         self.ui_set()
         self.ui_start()
@@ -158,8 +164,9 @@ class UI:
 
 
 if __name__ == "__main__":
+    multiprocessing.set_start_method('spawn', force=True)
     dataqueue = Queue()
-    o=ImageOCR(dataqueue)
+    
 
-    u = UI(o,dataqueue)
+    u = UI(ImageOCR,dataqueue)
 

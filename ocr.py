@@ -80,6 +80,7 @@ class ImageOCR:
     def worker_process(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         print("worker_process is runing")
+        self.send_data("info","worker_process is runing")
         self.reader = easyocr.Reader(['ch_sim','en'],gpu=True)
         print("reader initialized")
         self.ready()
@@ -122,11 +123,13 @@ class ImageOCR:
     def end(self):
         self.image_queue.put(None)
         print("stop monitor")
+        self.send_data("info","stop monitor")
 
         while self.p.is_alive():
             time.sleep(0.5)
             print("waiting attach process")
         print("attach process ended")
+        self.send_data("info","attach process ended")
         shutil.rmtree("textfile//")
                 
         print("ocr is ended successfully ",len(self.questions)," questions were recoreded")
@@ -137,7 +140,7 @@ class ImageOCR:
         next_num = 1
         pyperclip.copy('')
         print("monitor started")
-        
+        self.send_data("info","monitor started")
         while True:
             # print(last_hash)
             if self.result_queue.empty()==0:
@@ -157,6 +160,7 @@ class ImageOCR:
                         if not self.image_queue.full():
                             self.image_queue.put((image.copy(),self.p_num))
                             print(self.p_num,"added,queue: ",self.image_queue.qsize())
+                            
                         else:
                             print("warning : queue is full")
 
