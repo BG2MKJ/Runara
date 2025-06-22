@@ -19,7 +19,7 @@ multiprocessing.set_start_method('spawn',force=True)
 
 class ImageOCR:
 
-    def send_data(self,head:str,data:str):
+    def send_data(self,head:str,data):
         send = (head,data)
         self.data_queue.put(send)
     
@@ -147,6 +147,7 @@ class ImageOCR:
                 q = self.result_queue.get()
                 self.questions.append(q)
                 print(f"question {len(self.questions)} {q}was captured")
+                self.send_data("question",self.questions)
             try:
                 image = ImageGrab.grabclipboard()
                 if image is not None:

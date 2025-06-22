@@ -124,7 +124,7 @@ class UI:
         self.questioncount_label.place(x=10,y=446)
 
         self.info_label = tk.Label(self.root,text="init",font="华文新魏 12")
-        self.info_label.place(x=400,y=16)
+        self.info_label.place(x=320,y=16)
 
     def start_queue_checking(self):
         if not self.running:
@@ -134,10 +134,13 @@ class UI:
             print("queue:",data)
             if data[0]=="info":
                 self.info_label.config(text=data[1])
+            if data[0]=="question":
+                self.question_text.delete("1.0",tk.END)
+                self.question_text.insert("1.0","\n\n".join(data[1]))
         except queue.Empty:
             pass
         finally:
-            print(1)
+            
             self.root.after(100,self.start_queue_checking)
 
     def ui_start(self):
