@@ -25,13 +25,14 @@ class ImageOCR:
     
     
 
-    def __init__(self,data_queue:Queue):
+    def __init__(self,data_queue:Queue,command:Queue):
         self.data_queue = data_queue
         self.image_queue = Queue(maxsize=100)
         self.result_queue = Queue(maxsize=100)
         self.p_num = 0
         self.runing = False
         self.processes = []
+        self.command = command
         self.questions = []
         os.makedirs("textfile",exist_ok=True)
         keyboard.add_hotkey("ctrl+shift+r",self.revocate)
@@ -73,6 +74,8 @@ class ImageOCR:
             self.p_num = self.p_num-1
             print(f"delete question: {r_question}")
             self.delete_image(self.p_num+1)
+            self.send_data("question",self.questions)
+            self.send_data("num",len(self.questions))
         else:
             print("cant delete empty question")
 
@@ -100,6 +103,8 @@ class ImageOCR:
                     print("processed ",number)
                     
                     self.result_queue.put(result)
+                    
+                    
                     
                     
 
@@ -134,6 +139,13 @@ class ImageOCR:
                 
         print("ocr is ended successfully ",len(self.questions)," questions were recoreded")
 
+    def receive_command(self):
+        if(self.command.empty()==0):
+            q = self.command.get()
+            if q[0] == "revocate":
+                self.revocate()
+
+
     def clipboard_monitor(self):
         last_hash = None
         current_hash = None
@@ -148,6 +160,9 @@ class ImageOCR:
                 self.questions.append(q)
                 print(f"question {len(self.questions)} {q}was captured")
                 self.send_data("question",self.questions)
+                self.send_data("num",len(self.questions))
+            else:
+                self.receive_command()
             try:
                 image = ImageGrab.grabclipboard()
                 if image is not None:

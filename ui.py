@@ -43,20 +43,27 @@ class UI:
     def confirm_button_click(self):
         pass
 
-    def confirm_button_click(self):
-        pass
-
     def revocate_button_click(self):
-        pass
+        self.send_command("revocate","")
 
     def set_question_count(self,n):
         self.questions_count_label.config(text=str(n))
+        print("set")
+
+    def request_balance(self):
+        p = Process(target=self.chat.request_balance)
+        p.start()
 
     def set_balance(self,n):
         self.balance.config(text=str(n))
 
     def set_text(self,text):
         pass
+
+    def send_command(self,head:str,data):
+        send = (head,data)
+        self.command.put(send)
+        print("command: ",send)
 
     def load_config(self):
         self.api_key=self.config.read_config("API","apikey")
@@ -114,7 +121,7 @@ class UI:
         self.questions_count_label = tk.Label(self.root,text="0",font="华文新魏 15")
         self.questions_count_label.place(x=120,y=440,height=40,width=40)
         
-        self.balance = tk.Label(self.root,text="0.45",font="华文新魏 15")
+        self.balance = tk.Label(self.root,text="?",font="华文新魏 15")
         self.balance.place(x=120,y=10,height=40,width=40)
 
         self.yourbalance_label = tk.Label(self.root,text="Your balance:",font="华文新魏 12")
@@ -137,6 +144,10 @@ class UI:
             if data[0]=="question":
                 self.question_text.delete("1.0",tk.END)
                 self.question_text.insert("1.0","\n\n".join(data[1]))
+            if data[0]=="num":
+                self.set_question_count(data[1])
+            if data[0]=="balance":
+                self.set_balance(data[1])
         except queue.Empty:
             pass
         finally:
@@ -148,20 +159,26 @@ class UI:
         self.running = 0
         self.back.terminate()
 
-    def __init__(self,ocr_class,data_queue:Queue):
+    
+
+    def __init__(self,ocr_class:ImageOCR,data_queue:Queue,command:Queue):
         self.running = 1
         self.api_key=""
         self.root = tk.Tk()
+        
         self.data_queue = data_queue
-
+        self.ocr = ocr_class
         self.config=Config()
         self.load_config()
+        self.chat = Chat_Api(self.api_key,self.data_queue)
+        self.command = command
         # self.ocr_process = Process(target=ocr.start)
         # self.ocr_process
         self.start_queue_checking()
-        self.back = Process(target=ocr_class(data_queue).start)
+        self.back = Process(target=self.ocr.start)
         self.back.start()
         self.ui_set()
+        self.request_balance()
         self.ui_start()
         
 
@@ -169,7 +186,8 @@ class UI:
 if __name__ == "__main__":
     multiprocessing.set_start_method('spawn', force=True)
     dataqueue = Queue()
-    
+    command = Queue()
+    ocr = ImageOCR(dataqueue,command)
 
-    u = UI(ImageOCR,dataqueue)
+    u = UI(ocr,dataqueue,command)
 
