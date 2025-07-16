@@ -41,14 +41,28 @@ class UI:
         return input_str
 
     def confirm_button_click(self):
-        pass
+        self.set_infolabel("asking...")
+        question = self.get_text()
+        answer = self.chat.ask_question(question)
+        print(answer)
+        self.set_infolabel("done")
+        self.set_question_count(0)
+        self.set_text(answer)
 
     def revocate_button_click(self):
+        if self.get_infolabel() == "done":
+            self.set_infolabel("ready")
+            self.send_command("refresh"," ")
+            return
         self.send_command("revocate","")
 
     def set_question_count(self,n):
         self.questions_count_label.config(text=str(n))
         print("set")
+
+    def get_infolabel(self):
+        text = self.info_label.cget("text")
+        return str(text)
 
     def request_balance(self):
         p = Process(target=self.chat.request_balance)
@@ -58,7 +72,15 @@ class UI:
         self.balance.config(text=str(n))
 
     def set_text(self,text):
-        pass
+        if type(text) == list:
+            self.question_text.delete("1.0",tk.END)
+            self.question_text.insert("1.0","\n\n".join(text))
+        if type(text) == str:
+            self.question_text.delete("1.0",tk.END)
+            self.question_text.insert("1.0",text)
+
+    def get_text(self):
+        return self.question_text.get("1.0", "end")
 
     def send_command(self,head:str,data):
         send = (head,data)
@@ -70,10 +92,13 @@ class UI:
         print("load apikey",self.api_key)
 
     def set_key(self):
+        last_key = self.api_key
         self.api_key=self.get_input("input apikey","input apikey")
         if self.api_key is not None:
             self.config.set_config("API","apikey",self.api_key)
             print("set apikey",self.api_key)
+        else:
+            self.api_key=last_key
 
     def show_key(self):
         messagebox.showinfo("apikey",self.api_key)
@@ -142,8 +167,8 @@ class UI:
             if data[0]=="info":
                 self.info_label.config(text=data[1])
             if data[0]=="question":
-                self.question_text.delete("1.0",tk.END)
-                self.question_text.insert("1.0","\n\n".join(data[1]))
+                self.set_text(data[1])
+                self.set_question_count(len(data[1]))
             if data[0]=="num":
                 self.set_question_count(data[1])
             if data[0]=="balance":

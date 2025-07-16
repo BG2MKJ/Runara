@@ -21,7 +21,7 @@ class Chat_Api:
         self.data_queue.put(send)
 
     def generate_promots(self,num_of_questions):
-        promots = f"接下来我将给你{num_of_questions}道题目，帮我解答，注意B选项可能错误识别为8。你只需要告诉我答案不需要写解析，你要快速输出。"+"请按以下 JSON 格式输出：  [{  \"question\": \"题目内容\",  \"type\": \"题目类型（single_choice/multiple_choice/true_false）\", \"options\": {\"A\": \"选项A内容\", \"B\": \"选项B内容\", ...},  \"answer\": \"正确答案（单选/判断为字符串，多选为数组）\",  \"explanation\": \"解析\"  }下一道题....]"
+        promots = f"接下来我将给你{num_of_questions}道题目，帮我解答，注意B选项可能错误识别为8。你只需要告诉我答案不需要写解析，你要快速输出。"+"输出格式：题干+换行+答案标号和答案内容+换行+解释+换行+换行"
         return promots
 
     def format_output(self,answer):

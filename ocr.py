@@ -144,6 +144,9 @@ class ImageOCR:
             q = self.command.get()
             if q[0] == "revocate":
                 self.revocate()
+            if q[0] == "refresh":
+                self.send_data("question",self.questions)
+
 
 
     def clipboard_monitor(self):
